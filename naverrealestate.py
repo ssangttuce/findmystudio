@@ -32,18 +32,6 @@ headers = {
     'user-agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/132.0.0.0 Safari/537.36',
 }
 
-# API 요청
-response = requests.get(
-    'https://new.land.naver.com/api/articles?markerId=2120310212103&markerType=LGEOHASH_MIX_ARTICLE&order=rank&realEstateType=APT%3AOPST%3AABYG%3AOBYG%3AGM%3AOR%3AVL%3ADDDGG%3AJWJT%3ASGJT%3AHOJT&tradeType=B1%3AB2&tag=%3A%3A%3A%3A%3A%3A%3ASMALLSPCRENT%3AONEROOM&rentPriceMin=0&rentPriceMax=70&priceMin=0&priceMax=3500&areaMin=0&areaMax=900000000&oldBuildYears&recentlyBuildYears&minHouseHoldCount&maxHouseHoldCount&showArticle=false&sameAddressGroup=false&minMaintenanceCost&maxMaintenanceCost&priceType=RETAIL&directions=&page=1&articleState',
-    cookies=cookies,
-    headers=headers,
-)
-
-# JSON 응답 데이터 가져오기
-data = response.json()
-article_list = data.get("articleList", [])
-print(article_list)
-
 # CSV 저장
 csv_file = "real_estate_data.csv"
 fieldnames = [
@@ -56,22 +44,30 @@ with open(csv_file, mode="w", newline="", encoding="utf-8") as file:
     writer = csv.DictWriter(file, fieldnames=fieldnames)
     writer.writeheader()
 
-    for article in article_list:
-        writer.writerow({
-            "articleNo": article.get("articleNo"),
-            "articleName": article.get("articleName"),
-            "realEstateTypeName": article.get("realEstateTypeName"),
-            "tradeTypeName": article.get("tradeTypeName"),
-            "floorInfo": article.get("floorInfo"),
-            "rentPrc": article.get("rentPrc"),
-            "dealOrWarrantPrc": article.get("dealOrWarrantPrc"),
-            "area1": article.get("area1"),
-            "area2": article.get("area2"),
-            "direction": article.get("direction"),
-            "articleFeatureDesc": article.get("articleFeatureDesc"),
-            "latitude": article.get("latitude"),
-            "longitude": article.get("longitude"),
-            "realtorName": article.get("realtorName"),
-        })
+    for page in range(1, 11):
+        url = f'https://new.land.naver.com/api/articles?markerId=2120310212103&markerType=LGEOHASH_MIX_ARTICLE&order=rank&realEstateType=APT%3AOPST%3AABYG%3AOBYG%3AGM%3AOR%3AVL%3ADDDGG%3AJWJT%3ASGJT%3AHOJT&tradeType=B1%3AB2&tag=%3A%3A%3A%3A%3A%3A%3ASMALLSPCRENT%3AONEROOM&rentPriceMin=0&rentPriceMax=70&priceMin=0&priceMax=3500&areaMin=0&areaMax=900000000&oldBuildYears&recentlyBuildYears&minHouseHoldCount&maxHouseHoldCount&showArticle=false&sameAddressGroup=false&minMaintenanceCost&maxMaintenanceCost&priceType=RETAIL&directions=&page={page}&articleState'
+
+        # API 요청
+        response = requests.get(url, cookies=cookies, headers=headers)
+        data = response.json()
+        article_list = data.get("articleList", [])
+
+        for article in article_list:
+            writer.writerow({
+                "articleNo": article.get("articleNo"),
+                "articleName": article.get("articleName"),
+                "realEstateTypeName": article.get("realEstateTypeName"),
+                "tradeTypeName": article.get("tradeTypeName"),
+                "floorInfo": article.get("floorInfo"),
+                "rentPrc": article.get("rentPrc"),
+                "dealOrWarrantPrc": article.get("dealOrWarrantPrc"),
+                "area1": article.get("area1"),
+                "area2": article.get("area2"),
+                "direction": article.get("direction"),
+                "articleFeatureDesc": article.get("articleFeatureDesc"),
+                "latitude": article.get("latitude"),
+                "longitude": article.get("longitude"),
+                "realtorName": article.get("realtorName"),
+            })
 
 print(f"CSV 파일이 '{csv_file}' 이름으로 저장되었습니다.")
