@@ -1,5 +1,7 @@
 import csv
 import requests
+from datetime import datetime
+import os
 
 # Cookies and headers 설정
 cookies = {
@@ -32,8 +34,16 @@ headers = {
     'user-agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/132.0.0.0 Safari/537.36',
 }
 
-# CSV 저장
-csv_file = "real_estate_data.csv"
+# 현재 날짜와 시간 설정
+now = datetime.now()
+formatted_date = now.strftime("%Y%m%d_%H%M%S")
+
+# 저장 경로 설정
+output_dir = "./studiolist"
+os.makedirs(output_dir, exist_ok=True)
+
+csv_file = os.path.join(output_dir, f"{formatted_date}.csv")
+
 fieldnames = [
     "articleNo", "articleName", "realEstateTypeName", "tradeTypeName", "floorInfo",
     "rentPrc", "dealOrWarrantPrc", "area1", "area2", "direction", "articleFeatureDesc",
