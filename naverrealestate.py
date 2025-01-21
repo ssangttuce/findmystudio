@@ -42,7 +42,7 @@ def fetch_region_list():
     return data.get("regionList", [])
 
 # 부동산 검색 및 CSV 저장
-def fetch_real_estate(cortarNo, dong_name):
+def fetch_real_estate(cortarNo, dong_name, rent_min, rent_max, price_min, price_max):
     now = datetime.now()
     formatted_date = now.strftime("%Y%m%d_%H%M%S")
     output_dir = "./studiolist"
@@ -64,7 +64,7 @@ def fetch_real_estate(cortarNo, dong_name):
                 f'https://new.land.naver.com/api/articles?cortarNo={cortarNo}'
                 f'&order=rank&realEstateType=APT%3AOPST%3AABYG%3AOBYG%3AGM%3AOR%3AVL%3ADDDGG%3AJWJT%3ASGJT%3AHOJT'
                 f'&tradeType=B1%3AB2&tag=%3A%3A%3A%3A%3A%3A%3ASMALLSPCRENT%3AONEROOM'
-                f'&rentPriceMin=0&rentPriceMax=70&priceMin=0&priceMax=3500'
+                f'&rentPriceMin={rent_min}&rentPriceMax={rent_max}&priceMin={price_min}&priceMax={price_max}'
                 f'&areaMin=0&areaMax=900000000&oldBuildYears&recentlyBuildYears'
                 f'&minHouseHoldCount&maxHouseHoldCount&showArticle=false'
                 f'&sameAddressGroup=false&minMaintenanceCost&maxMaintenanceCost'
@@ -107,7 +107,21 @@ if region_list:
         if 1 <= choice <= len(region_list):
             selected_region = region_list[choice - 1]
             print(f"선택한 동: {selected_region['cortarName']}")
-            fetch_real_estate(selected_region['cortarNo'], selected_region['cortarName'])
+
+            # 사용자 입력: 월세와 보증금 범위
+            rent_min = input("최소 월세를 입력하세요 (기본값: 0): ") or "0"
+            rent_max = input("최대 월세를 입력하세요 (기본값: 무제한): ") or "900000000"
+            price_min = input("최소 보증금을 입력하세요 (기본값: 0): ") or "0"
+            price_max = input("최대 보증금을 입력하세요 (기본값: 무제한): ") or "900000000"
+
+            fetch_real_estate(
+                selected_region['cortarNo'],
+                selected_region['cortarName'],
+                rent_min,
+                rent_max,
+                price_min,
+                price_max
+            )
         else:
             print("잘못된 번호를 입력하셨습니다.")
     except ValueError:
