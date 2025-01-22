@@ -55,35 +55,34 @@ def fetch_real_estate(cortarNo, dong_name, rent_min, rent_max, price_min, price_
         "latitude", "longitude", "realtorName"
     ]
 
-    with open(csv_file, mode="w", newline="", encoding="utf-8") as file:
-        writer = csv.DictWriter(file, fieldnames=fieldnames)
-        writer.writeheader()
+    articles = []
 
-        for page in range(1, 11):
-            url = (
-                f'https://new.land.naver.com/api/articles?cortarNo={cortarNo}'
-                f'&order=rank&realEstateType=APT%3AOPST%3AABYG%3AOBYG%3AGM%3AOR%3AVL%3ADDDGG%3AJWJT%3ASGJT%3AHOJT'
-                f'&tradeType=B1%3AB2&tag=%3A%3A%3A%3A%3A%3A%3ASMALLSPCRENT%3AONEROOM'
-                f'&rentPriceMin={rent_min}&rentPriceMax={rent_max}&priceMin={price_min}&priceMax={price_max}'
-                f'&areaMin=0&areaMax=900000000&oldBuildYears&recentlyBuildYears'
-                f'&minHouseHoldCount&maxHouseHoldCount&showArticle=false'
-                f'&sameAddressGroup=false&minMaintenanceCost&maxMaintenanceCost'
-                f'&priceType=RETAIL&directions=&page={page}&articleState'
-            )
+    for page in range(1, 11):
+        url = (
+            f'https://new.land.naver.com/api/articles?cortarNo={cortarNo}'
+            f'&order=rank&realEstateType=APT%3AOPST%3AABYG%3AOBYG%3AGM%3AOR%3AVL%3ADDDGG%3AJWJT%3ASGJT%3AHOJT'
+            f'&tradeType=B1%3AB2&tag=%3A%3A%3A%3A%3A%3A%3ASMALLSPCRENT%3AONEROOM'
+            f'&rentPriceMin={rent_min}&rentPriceMax={rent_max}&priceMin={price_min}&priceMax={price_max}'
+            f'&areaMin=0&areaMax=900000000&oldBuildYears&recentlyBuildYears'
+            f'&minHouseHoldCount&maxHouseHoldCount&showArticle=false'
+            f'&sameAddressGroup=false&minMaintenanceCost&maxMaintenanceCost'
+            f'&priceType=RETAIL&directions=&page={page}&articleState'
+        )
 
-            response = requests.get(url, cookies=cookies, headers=headers)
-            data = response.json()
-            article_list = data.get("articleList", [])
-
+        response = requests.get(url, cookies=cookies, headers=headers)
+        data = response.json()
+        article_list = data.get("articleList", [])
+        
+        try:
             for article in article_list:
-                writer.writerow({
+                articles.append({
                     "articleNo": article.get("articleNo"),
-                    "articleName": article.get("articleName"),
+                    "articleName": article.get("articleName", ""),
                     "realEstateTypeName": article.get("realEstateTypeName"),
                     "tradeTypeName": article.get("tradeTypeName"),
                     "floorInfo": article.get("floorInfo"),
-                    "rentPrc": article.get("rentPrc"),
-                    "dealOrWarrantPrc": article.get("dealOrWarrantPrc"),
+                    "rentPrc": article.get("rentPrc", "0"),
+                    "dealOrWarrantPrc": article.get("dealOrWarrantPrc", "0"),
                     "area1": article.get("area1"),
                     "area2": article.get("area2"),
                     "direction": article.get("direction"),
@@ -92,6 +91,21 @@ def fetch_real_estate(cortarNo, dong_name, rent_min, rent_max, price_min, price_
                     "longitude": article.get("longitude"),
                     "realtorName": article.get("realtorName"),
                 })
+        except:
+            raise print('here')
+
+    # 정렬 (articleName → floorInfo → rentPrc → dealOrWarrantPrc 순서)
+    articles.sort(key=lambda x: (
+        x["articleName"],
+        x["floorInfo"],
+        x["rentPrc"],
+        x["dealOrWarrantPrc"]
+    ))
+
+    with open(csv_file, mode="w", newline="", encoding="utf-8") as file:
+        writer = csv.DictWriter(file, fieldnames=fieldnames)
+        writer.writeheader()
+        writer.writerows(articles)
 
     print(f"CSV 파일이 '{csv_file}' 이름으로 저장되었습니다.")
 
@@ -124,7 +138,12 @@ if region_list:
             )
         else:
             print("잘못된 번호를 입력하셨습니다.")
-    except ValueError:
+    except ValueError as e:
         print("유효한 숫자를 입력하세요.")
+        print(f'error message: {e}')
+        print(rent_min)
+        print(rent_max)
+        print(price_min)
+        print(price_max)
 else:
     print("동 목록을 가져오지 못했습니다.")
